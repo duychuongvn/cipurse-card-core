@@ -22,15 +22,7 @@ public class BinaryFileImpl extends CipurseFileImpl implements BinaryFile {
     public byte[] readBinary(CommandApdu commandApdu) {
         // 00 B0 00 00 le
         int responseLength;
-        int offset;
-        if(ByteUtils.matchBitByBitIndex((byte) commandApdu.getP1(), 7)) {
-            offset = commandApdu.getP2();
-        } else {
-            byte[] offsetBytes = new byte[2];
-            offsetBytes[0] = (byte)(commandApdu.getP1() & 0x7F);
-            offsetBytes[1] = (byte) commandApdu.getP2();
-            offset = ByteUtils.byteArrayToInt(offsetBytes);
-        }
+        int offset = getOffset(commandApdu.getP1(), commandApdu.getP2());
         if (commandApdu.getLe() < content.length) {
             responseLength = commandApdu.getLe();
         } else {
@@ -42,8 +34,24 @@ public class BinaryFileImpl extends CipurseFileImpl implements BinaryFile {
         return response;
     }
 
+    private int getOffset(int p1, int p2) {
+        int offset;
+        if(ByteUtils.matchBitByBitIndex((byte) p1, 7)) {
+            offset = p2;
+        } else {
+            byte[] offsetBytes = new byte[2];
+            offsetBytes[0] = (byte)(p1 & 0x7F);
+            offsetBytes[1] = (byte) p2;
+            offset = ByteUtils.byteArrayToInt(offsetBytes);
+        }
+        return offset;
+    }
+
     public byte[] updateBinary(CommandApdu commandApdu) {
         // 00 D6 00 00 lc data
+        int offset = getOffset(commandApdu.getP1(), commandApdu.getP2());
+        int lc = commandApdu.getLc();
+        System.arraycopy(commandApdu.getData(), 0, content, offset, lc);
         return new byte[0];
     }
 
