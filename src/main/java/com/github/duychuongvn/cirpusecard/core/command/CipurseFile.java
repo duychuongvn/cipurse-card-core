@@ -1,6 +1,6 @@
 package com.github.duychuongvn.cirpusecard.core.command;
 
-import com.github.duychuongvn.cirpusecard.core.util.CommandApdu;
+import org.osptalliance.cipurse.commands.EFFileAttributes;
 
 /**
  * Created by huynhduychuong on 4/28/2016.

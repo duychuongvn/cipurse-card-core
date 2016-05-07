@@ -1,9 +1,7 @@
 package com.github.duychuongvn.cirpusecard.core.command;
 
-import com.github.duychuongvn.cirpusecard.core.command.CipurseFile;
 import com.github.duychuongvn.cirpusecard.core.command.impl.ADFFileImpl;
 import com.github.duychuongvn.cirpusecard.core.util.ByteUtils;
-import com.github.duychuongvn.cirpusecard.core.util.CommandApdu;
 
 /**
  * Created by huynhduychuong on 5/5/2016.
@@ -15,7 +13,7 @@ public class CreateCipurseFileFactory {
     }
     private static final short DGI_CREATE_ADF = -28160; // byte[]{(byte) 0x92, (byte) 0x00};
     private static final short DGI_CREATE_EF =  -28159; // byte[]{(byte) 0x92, (byte) 0x01};
-    public static CipurseFile createInstance(CommandApdu commandApdu) {
+    public static CipurseFile createInstance(CommandApdu commandApdu, ADFFile adfFile) {
         byte[] data = commandApdu.getData();
         byte[] dgiBytes = new byte[2];
         System.arraycopy(data, 0, dgiBytes, 0, dgiBytes.length);
@@ -23,8 +21,12 @@ public class CreateCipurseFileFactory {
         String dgiHex = ByteUtils.bytesToHexString(dgiBytes);
         switch (dgi) {
             case DGI_CREATE_ADF:
-                return new ADFFileImpl();
-
+                ADFFile childADFFile = new  ADFFileImpl();
+                childADFFile.createFile(commandApdu);
+                return childADFFile;
+            case DGI_CREATE_EF:
+                 adfFile.createEF(commandApdu);
+                 return adfFile.getCurrentEF();
         }
         return null;
     }

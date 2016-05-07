@@ -2,14 +2,16 @@ package com.github.duychuongvn.cirpusecard.core.command.impl;
 
 import com.github.duychuongvn.cirpusecard.core.command.ADFFile;
 import com.github.duychuongvn.cirpusecard.core.command.BinaryFile;
+import com.github.duychuongvn.cirpusecard.core.constant.CommandEnum;
 import com.github.duychuongvn.cirpusecard.core.util.ByteUtils;
-import com.github.duychuongvn.cirpusecard.core.util.CommandApdu;
+import com.github.duychuongvn.cirpusecard.core.command.CommandApdu;
 import org.osptalliance.cipurse.commands.*;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * Created by huynhduychuong on 5/5/2016.
  */
-public class BinaryFileImpl extends CipurseFileImpl implements BinaryFile {
+public class BinaryFileImpl extends ElementFileImpl implements BinaryFile {
     private SMR smr;
     private ART[] art;
     private EFFileAttributes efFileAttributes;
@@ -102,6 +104,16 @@ public class BinaryFileImpl extends CipurseFileImpl implements BinaryFile {
 
     public EFFileAttributes getEfFileAttributes() {
         return efFileAttributes;
+    }
+
+    public byte[] execute(CommandApdu commandApdu) {
+        if(commandApdu.getCommandEnum() == CommandEnum.UPDATE_BINARY) {
+            return updateBinary(commandApdu);
+        } else if(commandApdu.getCommandEnum() == CommandEnum.READ_BINARY) {
+            return readBinary(commandApdu);
+        } else {
+            throw new NotImplementedException();
+        }
     }
 
     public byte[] getContent() {

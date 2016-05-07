@@ -1,19 +1,15 @@
 package com.github.duychuongvn.cirpusecard.core.command.impl;
 
-import com.github.duychuongvn.cirpusecard.core.command.ADFFile;
-import com.github.duychuongvn.cirpusecard.core.command.CipurseFile;
-import com.github.duychuongvn.cirpusecard.core.command.CipurseFileFactory;
+import com.github.duychuongvn.cirpusecard.core.command.*;
 import com.github.duychuongvn.cirpusecard.core.util.ByteUtils;
-import com.github.duychuongvn.cirpusecard.core.util.CommandApdu;
 import org.osptalliance.cipurse.commands.*;
-import org.osptalliance.cipurse.commands.ByteArray;
 
 import java.util.Arrays;
 
 /**
  * Created by huynhduychuong on 4/28/2016.
  */
-public class ADFFileImpl extends CipurseFileImpl implements ADFFile {
+public class ADFFileImpl implements ADFFile {
     private DFFileAttributes dfFileAttributes = new DFFileAttributes();
     private SecurityAttributes securityAttributes;
     private SMR smr;
@@ -21,11 +17,11 @@ public class ADFFileImpl extends CipurseFileImpl implements ADFFile {
     private KeyAttributeInfo[] keyAttributeInfos;
 
 
-    private CipurseFile currentEF;
-    private CipurseFile[] efFiles;
+    private ElementFile currentEF;
+    private ElementFile[] efFiles;
 
     public ADFFileImpl() {
-        super(null);
+
     }
 
     public byte[] deactiveFile(CommandApdu commandApdu) {
@@ -45,20 +41,45 @@ public class ADFFileImpl extends CipurseFileImpl implements ADFFile {
     }
 
     public byte[] createEF(CommandApdu commandApdu) {
-        currentEF = CipurseFileFactory.createInstance(commandApdu, this);
+        currentEF = ElementFileFactory.createInstance(commandApdu, this);
         currentEF.createFile(commandApdu);
         pushCurrentEFIntoCache();
         return new byte[0];
     }
 
+    public byte[] selectEF(CommandApdu commandApdu) {
+        int fidIndex = 5;
+        byte[] fidBytes = new byte[commandApdu.getLc()];
+
+        System.arraycopy(commandApdu.getData(), fidIndex, fidBytes, 0, commandApdu.getLc());
+        int fid = ByteUtils.byteArrayToInt(fidBytes);
+        boolean isFileSelected = false;
+        for (ElementFile elementFile : efFiles) {
+            if (elementFile.getEfFileAttributes().fileID == fid) {
+                currentEF = elementFile;
+                isFileSelected = true;
+                break;
+            }
+        }
+        if (!isFileSelected) {
+            //TODO: throw exception
+        }
+        return new byte[0];
+    }
+
+    public byte[] executeEFCommand(CommandApdu commandApdu) {
+        return currentEF.execute(commandApdu);
+    }
+
     private void pushCurrentEFIntoCache() {
-        for (int i=0;i<efFiles.length;i++) {
-            if(efFiles[i]==null) {
+        for (int i = 0; i < efFiles.length; i++) {
+            if (efFiles[i] == null) {
                 efFiles[i] = currentEF;
                 break;
             }
         }
     }
+
     public byte[] createFile(CommandApdu commandApdu) {
         byte[] data = commandApdu.getData();
         // FE-Len- FD: 1 byte - Type: 1 byte - FileId -NbrEF-NbrSFID-NbrKey-SMR-ART-KeySet-FCP
@@ -84,7 +105,7 @@ public class ADFFileImpl extends CipurseFileImpl implements ADFFile {
         dfFileAttributes.numOfKeys = secAttributes[numOfKeysIndex];
 
         int keySetIndex = artIndex + dfFileAttributes.numOfKeys + 1;
-        int fcpIndex = keySetIndex + dfFileAttributes.numOfKeys *3;
+        int fcpIndex = keySetIndex + dfFileAttributes.numOfKeys * 3;
 
         int tagLength = secAttributes.length - fcpIndex;
         byte[] tag62 = new byte[tagLength];
@@ -95,12 +116,12 @@ public class ADFFileImpl extends CipurseFileImpl implements ADFFile {
         art = new ART[dfFileAttributes.numOfKeys + 1];
         System.arraycopy(secAttributes, artIndex, artBytes, 0, artBytes.length);
 
-        for (int i=0;i<art.length;i++) {
+        for (int i = 0; i < art.length; i++) {
             int acgValue = artBytes[i];
-            art[i] =  new ART(acgValue);
+            art[i] = new ART(acgValue);
         }
 
-        byte[] keySetInBytes = new byte[dfFileAttributes.numOfKeys*3];
+        byte[] keySetInBytes = new byte[dfFileAttributes.numOfKeys * 3];
         System.arraycopy(secAttributes, keySetIndex, keySetInBytes, 0, keySetInBytes.length);
         int keyValueLength = data.length - 3 - secAttributes.length;
         boolean isContainsKey = keyValueLength > 0;
@@ -118,10 +139,10 @@ public class ADFFileImpl extends CipurseFileImpl implements ADFFile {
         for (int i = 0; i < dfFileAttributes.numOfKeys; i++) {
 
             byte[] keySet = new byte[3];
-            System.arraycopy(keySetInBytes, i*3, keySet,0, 3);
+            System.arraycopy(keySetInBytes, i * 3, keySet, 0, 3);
             byte[] keyDataBytes = new byte[KeyAttributeInfo.KEY_OBJECT_SIZE];
             System.arraycopy(keyValueBytes, keyIndex, keyDataBytes, 0, keyDataBytes.length);
-            keyIndex+=keyDataBytes.length;
+            keyIndex += keyDataBytes.length;
             KeyAttributeInfo keyAttributeInfo = new KeyAttributeInfo();
             keyAttributeInfo.setKeyValue(new ByteArray(Arrays.copyOf(keyDataBytes, 16)));
             keyAttributeInfo.kvv = Arrays.copyOfRange(keyDataBytes, 17, 20);
@@ -132,21 +153,18 @@ public class ADFFileImpl extends CipurseFileImpl implements ADFFile {
             keyAttributeInfos[i] = keyAttributeInfo;
         }
 
-        efFiles = new CipurseFile[dfFileAttributes.numOfEFs];
+        efFiles = new ElementFile[dfFileAttributes.numOfEFs];
         return new byte[0];
     }
 
-    @Override
     public byte[] readFileAttributes(CommandApdu commandApdu) {
-
-
         return new byte[0];
     }
 
-    @Override
     public byte[] updateFileAttributes(CommandApdu commandApdu) {
         return new byte[0];
     }
+
 
     public DFFileAttributes getDfFileAttributes() {
         return dfFileAttributes;
@@ -167,7 +185,8 @@ public class ADFFileImpl extends CipurseFileImpl implements ADFFile {
     public SecurityAttributes getSecurityAttributes() {
         return securityAttributes;
     }
-    public CipurseFile getCurrentEF() {
+
+    public ElementFile getCurrentEF() {
         return currentEF;
     }
 

@@ -4,7 +4,6 @@ import com.github.duychuongvn.cirpusecard.core.command.impl.ADFFileImpl;
 import com.github.duychuongvn.cirpusecard.core.command.impl.BinaryFileImpl;
 import com.github.duychuongvn.cirpusecard.core.constant.CommandEnum;
 import com.github.duychuongvn.cirpusecard.core.util.ByteUtils;
-import com.github.duychuongvn.cirpusecard.core.util.CommandApdu;
 import org.fest.assertions.Assertions;
 import org.junit.Test;
 import org.osptalliance.cipurse.commands.EFFileAttributes;

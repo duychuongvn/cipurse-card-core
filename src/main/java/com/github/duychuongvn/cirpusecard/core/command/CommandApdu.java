@@ -64,7 +64,7 @@ public class CommandApdu {
             case CASE1:
                 break;
             case CASE2:
-                this.le = command[4];
+                this.le =  ByteUtils.byteToInt(command[4]) ;
                 if (le == 0) {
                     le = 256;
                 }
@@ -75,7 +75,7 @@ public class CommandApdu {
                 leUsed = true;
                 break;
             case CASE3:
-                lc = command[4];
+                lc =  ByteUtils.byteToInt(command[4]);
                 data = new byte[lc];
                 System.arraycopy(command, 5, data, 0, lc);
                 break;
@@ -85,8 +85,8 @@ public class CommandApdu {
                 System.arraycopy(command, 7, data, 0, lc);
                 break;
             case CASE4:
-                lc = command[4];
-                le = command[command.length - 1];
+                lc =  ByteUtils.byteToInt(command[4]);
+                le =  ByteUtils.byteToInt(command[command.length - 1]);
                 data = new byte[lc];
                 System.arraycopy(command, 5, data, 0, lc);
                 leUsed = true;
