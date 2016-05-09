@@ -9,11 +9,10 @@ import java.util.List;
 /**
  * Created by huynhduychuong on 5/6/2016.
  */
-public class CommandFactory {
+public class CommandProvider {
 
     private List<ADFFile> adfFiles = new ArrayList<ADFFile>(10);
     private ADFFile currentADF;
-
     public byte[] execute(byte[] apdu) {
         CommandApdu commandApdu = new CommandApdu(apdu);
         byte[] response = new byte[0];
@@ -49,9 +48,7 @@ public class CommandFactory {
     }
 
     private byte[] selectFileByFID(CommandApdu commandApdu) {
-
-        currentADF.selectEF(commandApdu);
-        return null;
+        return currentADF.selectEF(commandApdu);
     }
 
     private byte[] selectFileByAID(CommandApdu commandApdu) {
