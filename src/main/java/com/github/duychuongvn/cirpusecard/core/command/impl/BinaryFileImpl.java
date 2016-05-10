@@ -2,11 +2,14 @@ package com.github.duychuongvn.cirpusecard.core.command.impl;
 
 import com.github.duychuongvn.cirpusecard.core.command.ADFFile;
 import com.github.duychuongvn.cirpusecard.core.command.BinaryFile;
+import com.github.duychuongvn.cirpusecard.core.command.CommandApdu;
 import com.github.duychuongvn.cirpusecard.core.constant.CommandEnum;
 import com.github.duychuongvn.cirpusecard.core.util.ByteUtils;
-import com.github.duychuongvn.cirpusecard.core.command.CommandApdu;
-import org.osptalliance.cipurse.commands.*;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+
+import org.osptalliance.cipurse.commands.ART;
+import org.osptalliance.cipurse.commands.ByteArray;
+import org.osptalliance.cipurse.commands.EFFileAttributes;
+import org.osptalliance.cipurse.commands.SMR;
 
 /**
  * Created by huynhduychuong on 5/5/2016.
@@ -68,14 +71,14 @@ public class BinaryFileImpl extends ElementFileImpl implements BinaryFile {
         int smrIndex = numOfKeyIndex + 1;
         int artIndex = smrIndex + 2;
         efFileAttributes = new EFFileAttributes();
-        efFileAttributes.fileType = data[fileTypeIndex];
-        efFileAttributes.SFID = data[sfidIndex];
+        efFileAttributes.fileType = ByteUtils.byteToShort(data[fileTypeIndex]);
+        efFileAttributes.SFID = ByteUtils.byteToShort(data[sfidIndex]);
         efFileAttributes.fileID = ByteUtils.getShort(data, (short) fileIDIndex);
         byte[] fileAttributes = new byte[2];
         System.arraycopy(data, fileAttributeIndex, fileAttributes, 0, fileAttributes.length);
         efFileAttributes.numOfRecs = 0;
-        efFileAttributes.fileSize = fileAttributes[1];
-        efFileAttributes.numOfKeys = data[numOfKeyIndex];
+        efFileAttributes.fileSize = ByteUtils.byteToInt(fileAttributes[1]);
+        efFileAttributes.numOfKeys = ByteUtils.byteToShort(data[numOfKeyIndex]);
 
 
         byte[] smrData = new byte[2];
@@ -112,7 +115,7 @@ public class BinaryFileImpl extends ElementFileImpl implements BinaryFile {
         } else if(commandApdu.getCommandEnum() == CommandEnum.READ_BINARY) {
             return readBinary(commandApdu);
         } else {
-            throw new NotImplementedException();
+            throw new IllegalArgumentException("Not implemented");
         }
     }
 

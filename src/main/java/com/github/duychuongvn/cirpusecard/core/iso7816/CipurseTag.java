@@ -2,7 +2,6 @@ package com.github.duychuongvn.cirpusecard.core.iso7816;
 
 import com.github.duychuongvn.cirpusecard.core.constant.TagValueTypeEnum;
 import com.github.duychuongvn.cirpusecard.core.iso7816.impl.TagImpl;
-import org.mockito.internal.util.reflection.Fields;
 
 import java.lang.reflect.Field;
 import java.util.LinkedHashMap;

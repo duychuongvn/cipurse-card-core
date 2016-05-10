@@ -15,7 +15,7 @@ public class CommandFactoryTest {
         String updateBinaryCommand = "00 D6 00 00 04 01 02 03 04";
         String readBinaryCommand = "00 B0 00 00 C8";
 
-        CommandFactory commandFactory = new CommandFactory();
+        CommandProvider commandFactory = new CommandProvider();
         String createADFResponse = ByteUtils.bytesToHexString(commandFactory.execute(ByteUtils.fromHexString(createADFCommand)));
         String createEFResponse = ByteUtils.bytesToHexString(commandFactory.execute(ByteUtils.fromHexString(createEFCommand)));
         String updateBinaryResponse = ByteUtils.bytesToHexString(commandFactory.execute(ByteUtils.fromHexString(updateBinaryCommand)));

@@ -48,10 +48,10 @@ public class ADFFileImpl implements ADFFile {
     }
 
     public byte[] selectEF(CommandApdu commandApdu) {
-        int fidIndex = 5;
+        int fidIndex = 0;
         byte[] fidBytes = new byte[commandApdu.getLc()];
 
-        System.arraycopy(commandApdu.getData(), fidIndex, fidBytes, 0, commandApdu.getLc());
+        System.arraycopy(commandApdu.getData(), fidIndex, fidBytes, 0,  commandApdu.getLc());
         int fid = ByteUtils.byteArrayToInt(fidBytes);
         boolean isFileSelected = false;
         for (ElementFile elementFile : efFiles) {
@@ -97,12 +97,12 @@ public class ADFFileImpl implements ADFFile {
 
         System.arraycopy(data, 3, secAttributes, 0, secAttributes.length);
         dfFileAttributes.setsecAttrValue(new ByteArray(secAttributes));
-        dfFileAttributes.fileDescriptor = secAttributes[fdIndex];
+        dfFileAttributes.fileDescriptor = ByteUtils.byteToShort(secAttributes[fdIndex]);
         dfFileAttributes.appProfile = (byte) (secAttributes[typeIndex] >> 5);
         dfFileAttributes.fileID = ByteUtils.getShort(secAttributes, (short) fileIdIndex);
-        dfFileAttributes.numOfEFs = secAttributes[numOfEfsIndex];
-        dfFileAttributes.numOfSFIDs = secAttributes[numOfSFIDsIndex];
-        dfFileAttributes.numOfKeys = secAttributes[numOfKeysIndex];
+        dfFileAttributes.numOfEFs = ByteUtils.byteToShort(secAttributes[numOfEfsIndex]);
+        dfFileAttributes.numOfSFIDs = ByteUtils.byteToShort(secAttributes[numOfSFIDsIndex]);
+        dfFileAttributes.numOfKeys = ByteUtils.byteToShort(secAttributes[numOfKeysIndex]);
 
         int keySetIndex = artIndex + dfFileAttributes.numOfKeys + 1;
         int fcpIndex = keySetIndex + dfFileAttributes.numOfKeys * 3;

@@ -66,7 +66,7 @@ public class CommandProvider {
             }
         }
         if (!isSelected) {
-            // TODO: throw expcetion
+            // TODO: throw exception
         }
         return new byte[0];
     }

@@ -56,6 +56,9 @@ public class ByteUtils {
     public static int byteToInt(byte byteValue) {
         return byteValue & 255;
     }
+    public static short byteToShort(byte byteValue) {
+        return (short)(byteValue & 255);
+    }
     public static int byteArrayToInt(byte[] byteArray, int startPos, int length) {
         if (byteArray == null) {
             throw new IllegalArgumentException("Parameter \'byteArray\' cannot be null");

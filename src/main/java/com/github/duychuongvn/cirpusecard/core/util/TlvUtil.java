@@ -7,9 +7,6 @@ import com.github.duychuongvn.cirpusecard.core.iso7816.CipurseTag;
 import com.github.duychuongvn.cirpusecard.core.iso7816.TLV;
 import com.github.duychuongvn.cirpusecard.core.iso7816.Tag;
 import com.github.duychuongvn.cirpusecard.core.iso7816.TagAndLength;
-import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
