@@ -1,7 +1,6 @@
 package com.github.duychuongvn.cirpusecard.core.command;
 
 import com.github.duychuongvn.cirpusecard.core.command.impl.ADFFileImpl;
-import com.github.duychuongvn.cirpusecard.core.command.impl.BinaryFileImpl;
 import com.github.duychuongvn.cirpusecard.core.command.impl.CyclicRecordFileImpl;
 import com.github.duychuongvn.cirpusecard.core.constant.CommandEnum;
 import com.github.duychuongvn.cirpusecard.core.util.ByteUtils;
@@ -102,6 +101,46 @@ public class CyclicRecordFileTest {
         expectedData[2] = (byte) 0x03;
         expectedData[3] = (byte) 0x02;
         expectedData[4] = (byte) 0x05;
+        Assertions.assertThat(fileData).isEqualTo(expectedData);
+    }
+
+    @Test
+    public void shouldAppendAndReadRecordSuccessful() {
+        String commandData = "92 01 0D 06 00 30 01 05 64 03 5A 5A FF FF FF FF";
+        ADFFile adfFile = new ADFFileImpl();
+        CyclicRecordFileImpl cyclicRecordFile = new CyclicRecordFileImpl(adfFile);
+        cyclicRecordFile.createFile(new CommandApdu(CommandEnum.CREATE_FILE, 00, 00, ByteUtils.fromHexString(commandData)));
+
+        String updateBinary = "01 02 03 04";
+        cyclicRecordFile.updateRecord(new CommandApdu(CommandEnum.UPDATE_BINARY, 1, 0, ByteUtils.fromHexString(updateBinary)));
+        updateBinary = "05 04 03 02 05";
+        cyclicRecordFile.updateRecord(new CommandApdu(CommandEnum.UPDATE_BINARY, 2, 0, ByteUtils.fromHexString(updateBinary)));
+        byte[] fileData = cyclicRecordFile.readRecord(new CommandApdu(CommandEnum.READ_RECORD, 1, 0, new byte[]{}, 256));
+        byte[] expectedData = new byte[100];
+        expectedData[0] = (byte) 0x01;
+        expectedData[1] = (byte) 0x02;
+        expectedData[2] = (byte) 0x03;
+        expectedData[3] = (byte) 0x04;
+        Assertions.assertThat(fileData).isEqualTo(expectedData);
+
+        fileData = cyclicRecordFile.readRecord(new CommandApdu(CommandEnum.READ_RECORD, 2, 0, new byte[]{}, 256));
+        expectedData = new byte[100];
+        expectedData[0] = (byte) 0x05;
+        expectedData[1] = (byte) 0x04;
+        expectedData[2] = (byte) 0x03;
+        expectedData[3] = (byte) 0x02;
+        expectedData[4] = (byte) 0x05;
+        Assertions.assertThat(fileData).isEqualTo(expectedData);
+        updateBinary = "0A 0B 0C 0D 0E";
+        cyclicRecordFile.appendRecord(new CommandApdu(CommandEnum.APPEND_RECORD, 0, 0, ByteUtils.fromHexString(updateBinary)));
+
+        fileData = cyclicRecordFile.readRecord(new CommandApdu(CommandEnum.READ_RECORD, 1, 0, new byte[]{}, 256));
+        expectedData = new byte[100];
+        expectedData[0] = (byte) 0x0A;
+        expectedData[1] = (byte) 0x0B;
+        expectedData[2] = (byte) 0x0C;
+        expectedData[3] = (byte) 0x0D;
+        expectedData[4] = (byte) 0x0E;
         Assertions.assertThat(fileData).isEqualTo(expectedData);
     }
 }

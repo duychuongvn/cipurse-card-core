@@ -4,6 +4,7 @@ import com.github.duychuongvn.cirpusecard.core.command.ADFFile;
 import com.github.duychuongvn.cirpusecard.core.command.CommandApdu;
 import com.github.duychuongvn.cirpusecard.core.command.CyclicRecordFile;
 import com.github.duychuongvn.cirpusecard.core.command.ElementFile;
+import com.github.duychuongvn.cirpusecard.core.constant.CommandEnum;
 import com.github.duychuongvn.cirpusecard.core.constant.SwEnum;
 import com.github.duychuongvn.cirpusecard.core.exception.Iso7816Exception;
 import com.github.duychuongvn.cirpusecard.core.util.ByteUtils;
@@ -31,10 +32,29 @@ public class CyclicRecordFileImpl extends ElementFileImpl implements CyclicRecor
     }
 
     public byte[] execute(CommandApdu commandApdu) {
-        return new byte[0];
+        if (commandApdu.getCommandEnum() == CommandEnum.UPDATE_RECORD) {
+            return updateRecord(commandApdu);
+        } else if (commandApdu.getCommandEnum() == CommandEnum.READ_RECORD) {
+            return readRecord(commandApdu);
+        } else if (commandApdu.getCommandEnum() == CommandEnum.APPEND_RECORD) {
+            return appendRecord(commandApdu);
+        } else {
+            throw new IllegalArgumentException("Not implemented");
+        }
     }
 
     public byte[] appendRecord(CommandApdu commandApdu) {
+        if (commandApdu.getP1() != 0) {
+            throw new Iso7816Exception(SwEnum.SW_WRONG_P1P2);
+        }
+        for (int i = 0; i < cyclicFiles.length - 1; i++) {
+            cyclicFiles[i + 1] = cyclicFiles[i].clone();
+        }
+
+        byte[] newRecord = new byte[efFileAttributes.RecSize];
+
+        System.arraycopy(commandApdu.getData(), 0, newRecord, 0, commandApdu.getLc());
+        cyclicFiles[0] = newRecord;
         return new byte[0];
     }
 
@@ -55,6 +75,7 @@ public class CyclicRecordFileImpl extends ElementFileImpl implements CyclicRecor
 
     public byte[] readRecord(CommandApdu commandApdu) {
         int recordNumber = getRecordNumber(commandApdu);
+        //TODO: check P2 to return records from record number to last
         return cyclicFiles[recordNumber - 1].clone();
     }
 }
