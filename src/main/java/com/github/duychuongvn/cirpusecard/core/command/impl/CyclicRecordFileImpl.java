@@ -4,6 +4,8 @@ import com.github.duychuongvn.cirpusecard.core.command.ADFFile;
 import com.github.duychuongvn.cirpusecard.core.command.CommandApdu;
 import com.github.duychuongvn.cirpusecard.core.command.CyclicRecordFile;
 import com.github.duychuongvn.cirpusecard.core.command.ElementFile;
+import com.github.duychuongvn.cirpusecard.core.constant.SwEnum;
+import com.github.duychuongvn.cirpusecard.core.exception.Iso7816Exception;
 import com.github.duychuongvn.cirpusecard.core.util.ByteUtils;
 
 /**
@@ -37,10 +39,22 @@ public class CyclicRecordFileImpl extends ElementFileImpl implements CyclicRecor
     }
 
     public byte[] updateRecord(CommandApdu commandApdu) {
+        byte[] data = commandApdu.getData();
+        int recordNumber = getRecordNumber(commandApdu);
+        System.arraycopy(data, 0, cyclicFiles[recordNumber - 1], 0, commandApdu.getLc());
         return new byte[0];
     }
 
+    private int getRecordNumber(CommandApdu commandApdu) {
+        int recordNumber = commandApdu.getP1();
+        if (recordNumber < 1 || recordNumber > efFileAttributes.numOfRecs) {
+            throw new Iso7816Exception(SwEnum.SW_WRONG_P1P2);
+        }
+        return recordNumber;
+    }
+
     public byte[] readRecord(CommandApdu commandApdu) {
-        return new byte[0];
+        int recordNumber = getRecordNumber(commandApdu);
+        return cyclicFiles[recordNumber - 1].clone();
     }
 }

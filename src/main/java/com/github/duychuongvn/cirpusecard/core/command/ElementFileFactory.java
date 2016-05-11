@@ -1,6 +1,7 @@
 package com.github.duychuongvn.cirpusecard.core.command;
 
 import com.github.duychuongvn.cirpusecard.core.command.impl.BinaryFileImpl;
+import com.github.duychuongvn.cirpusecard.core.command.impl.CyclicRecordFileImpl;
 import org.osptalliance.cipurse.commands.EFFileAttributes;
 
 /**
@@ -16,7 +17,7 @@ public class ElementFileFactory {
                 return new BinaryFileImpl(adfFile);
             case EFFileAttributes.CYCLIC_RECORD_TRANS_TYPE:
             case EFFileAttributes.CYCLIC_RECORD_TYPE:
-                break;
+                return new CyclicRecordFileImpl(adfFile);
             case EFFileAttributes.LINEAR_RECORD_TRANS_TYPE:
             case EFFileAttributes.LINEAR_RECORD_TYPE :
                 break;
