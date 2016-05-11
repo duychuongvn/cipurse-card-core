@@ -5,6 +5,7 @@ import com.github.duychuongvn.cirpusecard.core.command.CommandApdu;
 import com.github.duychuongvn.cirpusecard.core.command.ElementFile;
 import com.github.duychuongvn.cirpusecard.core.util.ByteUtils;
 import org.osptalliance.cipurse.commands.ART;
+import org.osptalliance.cipurse.commands.ByteArray;
 import org.osptalliance.cipurse.commands.EFFileAttributes;
 import org.osptalliance.cipurse.commands.SMR;
 
@@ -62,7 +63,28 @@ public abstract class ElementFileImpl implements ElementFile {
         return artBytes;
     }
 
-    public abstract byte[] updateFileAttributes(CommandApdu commandApdu);
+    public byte[] updateFileAttributes(CommandApdu commandApdu) {
+        byte[] data = commandApdu.getData();
+
+        int numOfKeyIndex = 0;
+        int smrIndex = numOfKeyIndex + 1;
+        int artIndex = smrIndex + 2;
+
+        byte[] smrData = new byte[2];
+        System.arraycopy(data, smrIndex, smrData, 0, smrData.length);
+
+        efFileAttributes.numOfKeys = ByteUtils.byteToShort(data[numOfKeyIndex]);
+        arts = new ART[efFileAttributes.numOfKeys + 1];
+        byte[] artBytes = new byte[efFileAttributes.numOfKeys + 1];
+        System.arraycopy(data, artIndex, artBytes, 0, artBytes.length);
+
+        for (int i = 0; i < arts.length; i++) {
+            int acgValue = artBytes[i];
+            arts[i] = new ART(acgValue);
+        }
+        smr = new SMR(new ByteArray(smrData));
+        return new byte[0];
+    }
 
 
     protected int getResponseLength(CommandApdu commandApdu) {
@@ -87,6 +109,42 @@ public abstract class ElementFileImpl implements ElementFile {
         }
         return offset;
     }
+
+    public byte[] createFile(CommandApdu commandApdu) {
+        // "92 01 0C 11 00 30 00 00 64 02 06 00 7F FF FF";
+        byte[] data = commandApdu.getData();
+        int fileTypeIndex = 3;
+        int sfidIndex = fileTypeIndex + 1;
+        int fileIDIndex = sfidIndex + 1;
+        int fileAttributeIndex = fileIDIndex + 2;
+        int numOfKeyIndex = fileAttributeIndex + 2;
+        int smrIndex = numOfKeyIndex + 1;
+        int artIndex = smrIndex + 2;
+        efFileAttributes = new EFFileAttributes();
+        efFileAttributes.fileType = ByteUtils.byteToShort(data[fileTypeIndex]);
+        efFileAttributes.SFID = ByteUtils.byteToShort(data[sfidIndex]);
+        efFileAttributes.fileID = ByteUtils.getShort(data, (short) fileIDIndex);
+        byte[] fileAttributes = new byte[2];
+        System.arraycopy(data, fileAttributeIndex, fileAttributes, 0, fileAttributes.length);
+        efFileAttributes.numOfRecs = 0;
+        efFileAttributes.fileSize = ByteUtils.byteToInt(fileAttributes[1]);
+        efFileAttributes.numOfKeys = ByteUtils.byteToShort(data[numOfKeyIndex]);
+
+        byte[] smrData = new byte[2];
+        System.arraycopy(data, smrIndex, smrData, 0, smrData.length);
+        byte[] artBytes = new byte[efFileAttributes.numOfKeys + 1];
+
+        arts = new ART[efFileAttributes.numOfKeys + 1];
+        System.arraycopy(data, artIndex, artBytes, 0, artBytes.length);
+
+        for (int i = 0; i < arts.length; i++) {
+            int acgValue = artBytes[i];
+            arts[i] = new ART(acgValue);
+        }
+        smr = new SMR(new ByteArray(smrData));
+        return new byte[0];
+    }
+
 
     public EFFileAttributes getEfFileAttributes() {
         return efFileAttributes;
