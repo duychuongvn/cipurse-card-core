@@ -23,7 +23,8 @@ public class CommandApdu {
     private boolean leUsed = false;
     private byte[] data = new byte[0];
     private CommandEnum commandEnum;
-
+    private boolean isSecureMessaging = false;
+    private byte smi;
     public CommandApdu(final CommandEnum commandEnum, int p1, int p2, byte[] data) {
         this.cla = commandEnum.getCla();
         this.ins = commandEnum.getIns();
@@ -55,8 +56,13 @@ public class CommandApdu {
     }
 
     public CommandApdu(byte[] command) {
-
-        int commandId = ByteUtils.byteArrayToInt(new byte[]{command[0], command[1]});
+        byte cla = command[0];
+        if(cla == (byte)0x04) {
+            cla = 0x00;
+            smi = command[5];
+            isSecureMessaging = true;
+        }
+        int commandId = ByteUtils.byteArrayToInt(new byte[]{cla, command[1]});
         try {
             this.commandEnum = EnumUtil.getEnum(commandId, CommandEnum.class);
         }catch (EnumParserException exception) {

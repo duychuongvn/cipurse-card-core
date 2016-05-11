@@ -20,6 +20,7 @@ public class ADFFileImpl implements ADFFile {
 
     private ElementFile currentEF;
     private ElementFile[] efFiles;
+    private byte[][] keySet;
 
     public ADFFileImpl() {
 
@@ -70,6 +71,10 @@ public class ADFFileImpl implements ADFFile {
 
     public byte[] executeEFCommand(CommandApdu commandApdu) {
         return currentEF.execute(commandApdu);
+    }
+
+    public byte[] getKeySet() {
+        return this.getKeySet();
     }
 
     private void pushCurrentEFIntoCache() {
@@ -137,21 +142,24 @@ public class ADFFileImpl implements ADFFile {
         securityAttributes = new SecurityAttributes(dfFileAttributes.numOfKeys, smr, art);
         keyAttributeInfos = new KeyAttributeInfo[dfFileAttributes.numOfKeys];
         int keyIndex = 3;
+        keySet = new byte[dfFileAttributes.numOfKeys][];
         for (int i = 0; i < dfFileAttributes.numOfKeys; i++) {
 
-            byte[] keySet = new byte[3];
-            System.arraycopy(keySetInBytes, i * 3, keySet, 0, 3);
+            byte[] keySetAttributes = new byte[3];
+            System.arraycopy(keySetInBytes, i * 3, keySetAttributes, 0, 3);
             byte[] keyDataBytes = new byte[KeyAttributeInfo.KEY_OBJECT_SIZE];
             System.arraycopy(keyValueBytes, keyIndex, keyDataBytes, 0, keyDataBytes.length);
             keyIndex += keyDataBytes.length;
             KeyAttributeInfo keyAttributeInfo = new KeyAttributeInfo();
+            // Value of Key [16] || KEY_ADDL_INFO [1] || KVV [3]
             keyAttributeInfo.setKeyValue(new ByteArray(Arrays.copyOf(keyDataBytes, 16)));
             keyAttributeInfo.kvv = Arrays.copyOfRange(keyDataBytes, 17, 20);
             byte keyInfo = keyDataBytes[16];
-            keyAttributeInfo.keySecAttrib = keySet[0];
-            keyAttributeInfo.keyLength = keySet[1];
-            keyAttributeInfo.keyAddInfo = keySet[2];
+            keyAttributeInfo.keySecAttrib = keySetAttributes[0];
+            keyAttributeInfo.keyLength = keySetAttributes[1];
+            keyAttributeInfo.keyAddInfo = keySetAttributes[2];
             keyAttributeInfos[i] = keyAttributeInfo;
+            this.keySet[i] = keyDataBytes;
         }
 
         efFiles = new ElementFile[dfFileAttributes.numOfEFs];

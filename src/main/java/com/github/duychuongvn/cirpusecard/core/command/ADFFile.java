@@ -13,6 +13,7 @@ public interface ADFFile extends CipurseFile {
     byte[] createEF(CommandApdu commandApdu);
     byte[] selectEF(CommandApdu commandApdu);
     byte[] executeEFCommand(CommandApdu commandApdu);
+    byte[] getKeySet();
     ElementFile getCurrentEF();
     DFFileAttributes getDfFileAttributes();
 }
