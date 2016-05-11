@@ -1,6 +1,8 @@
 package com.github.duychuongvn.cirpusecard.core.command;
 
 import com.github.duychuongvn.cirpusecard.core.constant.CommandEnum;
+import com.github.duychuongvn.cirpusecard.core.constant.SwEnum;
+import com.github.duychuongvn.cirpusecard.core.exception.Iso7816Exception;
 import com.github.duychuongvn.cirpusecard.core.util.ByteUtils;
 
 import java.util.ArrayList;
@@ -66,7 +68,7 @@ public class CommandProvider {
             }
         }
         if (!isSelected) {
-            // TODO: throw exception
+            throw new Iso7816Exception(SwEnum.SW_FILE_NOT_FOUND);
         }
         return new byte[0];
     }

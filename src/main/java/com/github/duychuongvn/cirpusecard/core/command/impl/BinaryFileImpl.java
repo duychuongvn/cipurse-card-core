@@ -15,9 +15,8 @@ import org.osptalliance.cipurse.commands.SMR;
  * Created by huynhduychuong on 5/5/2016.
  */
 public class BinaryFileImpl extends ElementFileImpl implements BinaryFile {
-    private SMR smr;
-    private ART[] art;
-    private EFFileAttributes efFileAttributes;
+
+
     private byte[] content;
 
     public BinaryFileImpl(ADFFile currentADF) {
@@ -26,31 +25,15 @@ public class BinaryFileImpl extends ElementFileImpl implements BinaryFile {
 
     public byte[] readBinary(CommandApdu commandApdu) {
         // 00 B0 00 00 le
-        int responseLength;
         int offset = getOffset(commandApdu.getP1(), commandApdu.getP2());
-        if (commandApdu.getLe() < content.length) {
-            responseLength = commandApdu.getLe();
-        } else {
-            responseLength = content.length;
-        }
+        int responseLength = getResponseLength(commandApdu);
         // TODO: Check response Length and offset with content length
         byte[] response = new byte[responseLength];
         System.arraycopy(content, offset, response, 0, responseLength);
         return response;
     }
 
-    private int getOffset(int p1, int p2) {
-        int offset;
-        if(ByteUtils.matchBitByBitIndex((byte) p1, 7)) {
-            offset = p2;
-        } else {
-            byte[] offsetBytes = new byte[2];
-            offsetBytes[0] = (byte)(p1 & 0x7F);
-            offsetBytes[1] = (byte) p2;
-            offset = ByteUtils.byteArrayToInt(offsetBytes);
-        }
-        return offset;
-    }
+
 
     public byte[] updateBinary(CommandApdu commandApdu) {
         // 00 D6 00 00 lc data
@@ -80,33 +63,45 @@ public class BinaryFileImpl extends ElementFileImpl implements BinaryFile {
         efFileAttributes.fileSize = ByteUtils.byteToInt(fileAttributes[1]);
         efFileAttributes.numOfKeys = ByteUtils.byteToShort(data[numOfKeyIndex]);
 
-
         byte[] smrData = new byte[2];
         System.arraycopy(data, smrIndex, smrData, 0, smrData.length);
         byte[] artBytes = new byte[efFileAttributes.numOfKeys + 1];
 
-        art = new ART[efFileAttributes.numOfKeys + 1];
+        arts = new ART[efFileAttributes.numOfKeys + 1];
         System.arraycopy(data, artIndex, artBytes, 0, artBytes.length);
 
-        for (int i = 0; i < art.length; i++) {
+        for (int i = 0; i < arts.length; i++) {
             int acgValue = artBytes[i];
-            art[i] = new ART(acgValue);
+            arts[i] = new ART(acgValue);
         }
         smr = new SMR(new ByteArray(smrData));
         content = new byte[efFileAttributes.fileSize];
         return new byte[0];
     }
 
-    public byte[] readFileAttributes(CommandApdu commandApdu) {
-        return new byte[0];
-    }
+
 
     public byte[] updateFileAttributes(CommandApdu commandApdu) {
-        return new byte[0];
-    }
+        byte[] data = commandApdu.getData();
 
-    public EFFileAttributes getEfFileAttributes() {
-        return efFileAttributes;
+        int numOfKeyIndex = 0;
+        int smrIndex = numOfKeyIndex + 1;
+        int artIndex = smrIndex + 2;
+
+        byte[] smrData = new byte[2];
+        System.arraycopy(data, smrIndex, smrData, 0, smrData.length);
+
+        efFileAttributes.numOfKeys = ByteUtils.byteToShort(data[numOfKeyIndex]);
+        arts = new ART[efFileAttributes.numOfKeys + 1];
+        byte[] artBytes = new byte[efFileAttributes.numOfKeys + 1];
+        System.arraycopy(data, artIndex, artBytes, 0, artBytes.length);
+
+        for (int i = 0; i < arts.length; i++) {
+            int acgValue = artBytes[i];
+            arts[i] = new ART(acgValue);
+        }
+        smr = new SMR(new ByteArray(smrData));
+        return new byte[0];
     }
 
     public byte[] execute(CommandApdu commandApdu) {
@@ -123,11 +118,5 @@ public class BinaryFileImpl extends ElementFileImpl implements BinaryFile {
         return content;
     }
 
-    public SMR getSmr() {
-        return smr;
-    }
 
-    public ART[] getArt() {
-        return art;
-    }
 }

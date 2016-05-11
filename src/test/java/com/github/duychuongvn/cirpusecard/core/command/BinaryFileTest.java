@@ -30,32 +30,32 @@ public class BinaryFileTest {
         Assertions.assertThat(binaryFile.getSmr().SMGroup_3).isEqualTo((byte)0x00);
         Assertions.assertThat(binaryFile.getSmr().SMGroup_4).isEqualTo((byte)0x00);
 
-        Assertions.assertThat(binaryFile.getArt()[0].ACGroup_1).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[0].ACGroup_2).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[0].ACGroup_3).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[0].ACGroup_4).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[0].ACGroup_5).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[0].ACGroup_6).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[0].ACGroup_7).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[0].ACGroup_8).isFalse();
+        Assertions.assertThat(binaryFile.getArts()[0].ACGroup_1).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[0].ACGroup_2).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[0].ACGroup_3).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[0].ACGroup_4).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[0].ACGroup_5).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[0].ACGroup_6).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[0].ACGroup_7).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[0].ACGroup_8).isFalse();
 
-        Assertions.assertThat(binaryFile.getArt()[1].ACGroup_1).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[1].ACGroup_2).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[1].ACGroup_3).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[1].ACGroup_4).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[1].ACGroup_5).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[1].ACGroup_6).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[1].ACGroup_7).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[1].ACGroup_8).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[1].ACGroup_1).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[1].ACGroup_2).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[1].ACGroup_3).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[1].ACGroup_4).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[1].ACGroup_5).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[1].ACGroup_6).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[1].ACGroup_7).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[1].ACGroup_8).isTrue();
 
-        Assertions.assertThat(binaryFile.getArt()[2].ACGroup_1).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[2].ACGroup_2).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[2].ACGroup_3).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[2].ACGroup_4).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[2].ACGroup_5).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[2].ACGroup_6).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[2].ACGroup_7).isTrue();
-        Assertions.assertThat(binaryFile.getArt()[2].ACGroup_8).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[2].ACGroup_1).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[2].ACGroup_2).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[2].ACGroup_3).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[2].ACGroup_4).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[2].ACGroup_5).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[2].ACGroup_6).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[2].ACGroup_7).isTrue();
+        Assertions.assertThat(binaryFile.getArts()[2].ACGroup_8).isTrue();
 
     }
 

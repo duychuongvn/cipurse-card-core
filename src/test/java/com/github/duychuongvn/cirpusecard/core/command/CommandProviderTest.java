@@ -7,7 +7,7 @@ import org.junit.Test;
 /**
  * Created by huynhduychuong on 5/7/2016.
  */
-public class CommandFactoryTest {
+public class CommandProviderTest {
     @Test
     public void shouldCreateADFThenCreateEFThenUpdateBinaryThenReadBinarySuccessful() {
         String createADFCommand = "00 E0 00 00 69 92 00 27 38 20 5F 00 01 01 03 00 06 40 00 00 13 02 10 09 02 10 09 02 10 09 62 0F 84 0D D2 76 00 00 04 15 02 00 00 03 00 01 01 A0 0F 3C 73 73 73 73 73 73 73 73 73 73 73 73 73 73 73 73 01 5F D6 7B 73 73 73 73 73 73 73 73 73 73 73 73 73 73 73 73 01 5F D6 7B 73 73 73 73 73 73 73 73 73 73 73 73 73 73 73 73 01 5F D6 7B";

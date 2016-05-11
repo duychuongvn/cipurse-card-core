@@ -56,9 +56,11 @@ public class ByteUtils {
     public static int byteToInt(byte byteValue) {
         return byteValue & 255;
     }
+
     public static short byteToShort(byte byteValue) {
-        return (short)(byteValue & 255);
+        return (short) (byteValue & 255);
     }
+
     public static int byteArrayToInt(byte[] byteArray, int startPos, int length) {
         if (byteArray == null) {
             throw new IllegalArgumentException("Parameter \'byteArray\' cannot be null");
@@ -92,5 +94,13 @@ public class ByteUtils {
             throw new IllegalArgumentException("Bit index must be between 0 and 31: " + bitIndex);
         }
         return (byteVal & 1 << bitIndex) != 0;
+    }
+
+    public static byte[] intToBytes(int intValue, int byteLength) {
+        byte[] bytes = new byte[byteLength];
+        for (int i = 0; i < byteLength; i++) {
+            bytes[i] = (byte) (intValue >> ((byteLength - i - 1) * 8));
+        }
+        return bytes;
     }
 }

@@ -1,6 +1,8 @@
 package com.github.duychuongvn.cirpusecard.core.command.impl;
 
 import com.github.duychuongvn.cirpusecard.core.command.*;
+import com.github.duychuongvn.cirpusecard.core.constant.SwEnum;
+import com.github.duychuongvn.cirpusecard.core.exception.Iso7816Exception;
 import com.github.duychuongvn.cirpusecard.core.util.ByteUtils;
 import org.osptalliance.cipurse.commands.*;
 
@@ -62,7 +64,7 @@ public class ADFFileImpl implements ADFFile {
             }
         }
         if (!isFileSelected) {
-            //TODO: throw exception
+            throw new Iso7816Exception(SwEnum.SW_FILE_NOT_FOUND);
         }
         return new byte[0];
     }
@@ -131,7 +133,7 @@ public class ADFFileImpl implements ADFFile {
         // A0 0F 3C 73 73 73 73 73 73 73 73 73 73 73 73 73 73 73 73 01 5F D6 7B 73 73 73 73 73 73 73 73 73 73 73 73 73 73 73 73 01 5F D6 7B 73 73 73 73 73 73 73 73 73 73 73 73 73 73 73 73 01 5F D6 7B
         int keysLength = keyValueBytes[2];
         if (keysLength % 20 != 0) {
-            throw new IllegalArgumentException("Key length not valid");
+            throw new Iso7816Exception(SwEnum.W_WRONG_LENGTH);
         }
         securityAttributes = new SecurityAttributes(dfFileAttributes.numOfKeys, smr, art);
         keyAttributeInfos = new KeyAttributeInfo[dfFileAttributes.numOfKeys];

@@ -2,6 +2,9 @@ package com.github.duychuongvn.cirpusecard.core.command;
 
 import com.github.duychuongvn.cirpusecard.core.constant.ApduCase;
 import com.github.duychuongvn.cirpusecard.core.constant.CommandEnum;
+import com.github.duychuongvn.cirpusecard.core.constant.SwEnum;
+import com.github.duychuongvn.cirpusecard.core.exception.EnumParserException;
+import com.github.duychuongvn.cirpusecard.core.exception.Iso7816Exception;
 import com.github.duychuongvn.cirpusecard.core.util.ByteUtils;
 import com.github.duychuongvn.cirpusecard.core.util.EnumUtil;
 
@@ -54,7 +57,11 @@ public class CommandApdu {
     public CommandApdu(byte[] command) {
 
         int commandId = ByteUtils.byteArrayToInt(new byte[]{command[0], command[1]});
-        this.commandEnum = EnumUtil.getEnum(commandId, CommandEnum.class);
+        try {
+            this.commandEnum = EnumUtil.getEnum(commandId, CommandEnum.class);
+        }catch (EnumParserException exception) {
+            throw  new Iso7816Exception(SwEnum.SW_INS_NOT_SUPPORTED);
+        }
         this.p1 = command[2];
         this.p2 = command[3];
         this.cla = commandEnum.getCla();
@@ -98,6 +105,8 @@ public class CommandApdu {
                 le = ByteUtils.getShort(command, (short) (command.length - 2));
                 leUsed = true;
                 break;
+            default:
+                throw new Iso7816Exception(SwEnum.SW_DATA_INVALID);
         }
 
 

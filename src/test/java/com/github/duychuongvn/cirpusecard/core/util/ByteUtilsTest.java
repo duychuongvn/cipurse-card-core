@@ -49,19 +49,32 @@ public class ByteUtilsTest {
         byte[] expectedBytes = new byte[]{(byte) 0x00, (byte) 0x00, (byte) 0x01, (byte) 0x02};
         Assertions.assertThat(ByteUtils.toByteArray(258)).isEqualTo(expectedBytes);
     }
+
     @Test
     public void shouldReturnShortValue() {
 
-        short actualValue = ByteUtils.getShort(new byte[]{(byte) 0x00, (byte) 0x00, (byte) 0x14, (byte) 0x02}, (short)2 );
-        Assertions.assertThat(actualValue).isEqualTo((short)5122);
-        Assertions.assertThat(ByteUtils.byteArrayToInt(new byte[]{(byte) 0x14, (byte) 0x02})).isEqualTo((short)5122);
+        short actualValue = ByteUtils.getShort(new byte[]{(byte) 0x00, (byte) 0x00, (byte) 0x14, (byte) 0x02}, (short) 2);
+        Assertions.assertThat(actualValue).isEqualTo((short) 5122);
+        Assertions.assertThat(ByteUtils.byteArrayToInt(new byte[]{(byte) 0x14, (byte) 0x02})).isEqualTo((short) 5122);
     }
 
     @Test
     public void shouldMatchBitByBitIndex() {
-        boolean actual5thBit = ByteUtils.matchBitByBitIndex((byte)0x10, 5);
-        boolean actual4thBit = ByteUtils.matchBitByBitIndex((byte)0x10, 4);
+        boolean actual5thBit = ByteUtils.matchBitByBitIndex((byte) 0x10, 4);
+        boolean actual4thBit = ByteUtils.matchBitByBitIndex((byte) 0x10, 3);
         Assertions.assertThat(actual5thBit).isTrue();
         Assertions.assertThat(actual4thBit).isFalse();
+    }
+
+    @Test
+    public void shouldConvertIntToBytes() {
+
+        byte[] expectedOneByte = new byte[]{(byte) 0x0A};
+        byte[] expectedTwoBytes = new byte[]{0, 127};
+        byte[] expected4Bytes = new byte[]{0, 0, 0, -128};
+
+        Assertions.assertThat(ByteUtils.intToBytes(10, 1)).isEqualTo(expectedOneByte);
+        Assertions.assertThat(ByteUtils.intToBytes(127, 2)).isEqualTo(expectedTwoBytes);
+        Assertions.assertThat(ByteUtils.intToBytes(128, 4)).isEqualTo(expected4Bytes);
     }
 }

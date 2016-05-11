@@ -24,7 +24,8 @@ public enum CommandEnum implements EnumKey {
     MUTUAL_AUTHENTICATE(0x00, 0x82),
     UPDATE_FILE_ATTRIBUTES(0x00, 0xDE),
     UPDATE_KEY(0x00, 0x52),
-    UPDATE_KEY_ATTRIBUTES(0x00, 0x4E),;
+    UPDATE_KEY_ATTRIBUTES(0x00, 0x4E),
+    READ_FILE_ATTRIBUTES(0x80, 0xCE),;
     private int cla;
     private int ins;
 
