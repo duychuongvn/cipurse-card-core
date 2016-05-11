@@ -18,7 +18,6 @@ public class ADFFileImpl implements ADFFile {
     private ART[] art;
     private KeyAttributeInfo[] keyAttributeInfos;
 
-
     private ElementFile currentEF;
     private ElementFile[] efFiles;
 
@@ -53,7 +52,7 @@ public class ADFFileImpl implements ADFFile {
         int fidIndex = 0;
         byte[] fidBytes = new byte[commandApdu.getLc()];
 
-        System.arraycopy(commandApdu.getData(), fidIndex, fidBytes, 0,  commandApdu.getLc());
+        System.arraycopy(commandApdu.getData(), fidIndex, fidBytes, 0, commandApdu.getLc());
         int fid = ByteUtils.byteArrayToInt(fidBytes);
         boolean isFileSelected = false;
         for (ElementFile elementFile : efFiles) {
