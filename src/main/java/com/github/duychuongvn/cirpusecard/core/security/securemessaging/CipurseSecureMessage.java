@@ -36,7 +36,7 @@ public class CipurseSecureMessage implements ISO7816 {
     private byte SMI;
     private boolean isSecuredMessage;
 
-    public static CipurseSecureMessage getInstance(IAes aes, ILogger logger) throws CipurseException {
+    public static CipurseSecureMessage getInstance(IAes aes, ILogger logger) {
         if (cipurseSecureMessage == null) {
             cipurseSecureMessage = new CipurseSecureMessage(aes, logger);
         }
@@ -44,7 +44,7 @@ public class CipurseSecureMessage implements ISO7816 {
     }
 
 
-    CipurseSecureMessage(IAes Aes, ILogger logger) {
+    private CipurseSecureMessage(IAes Aes, ILogger logger) {
         this.logger = logger;
         this.Aes = Aes;
         this.cipurseCrypto = new CipurseCrypto(Aes, logger);
@@ -75,75 +75,8 @@ public class CipurseSecureMessage implements ISO7816 {
         }
     }
 
-    public byte[] encryptText(byte[] keyValue, byte[] textToBeEncrypted) throws CipurseException {
-        return this.Aes.aesEncrypt(keyValue, textToBeEncrypted);
-    }
-
-    public byte[] encryptText(byte keyNum, byte[] textToBeEncrypted) throws CipurseException {
-        if (this.keySet != null && this.keySet.length > keyNum) {
-            return this.Aes.aesEncrypt(this.keySet[keyNum], textToBeEncrypted);
-        } else {
-            throw new CipurseException("Key value is not initialized");
-        }
-    }
-
-    public byte[] decryptText(byte[] keyValue, byte[] textToBeDecrypted) throws CipurseException {
-        return this.Aes.aesDecrypt(keyValue, textToBeDecrypted);
-    }
-
-    public byte[] decryptText(byte keyNum, byte[] textToBeDecrypted) throws CipurseException {
-        if (this.keySet != null && this.keySet.length > keyNum) {
-            return this.Aes.aesDecrypt(this.keySet[keyNum], textToBeDecrypted);
-        } else {
-            throw new CipurseException("Key value is not initialized");
-        }
-    }
-
-    public byte[] encryptText(byte keyAlgorithm, byte[] keyValue, byte[] textToBeEncrypted, CryptoParameters params) throws CipurseException {
-        if (this.Aes instanceof ICryptoEngine) {
-            ICryptoEngine padAlgo1 = (ICryptoEngine) this.Aes;
-            return padAlgo1.encrypt(keyAlgorithm, keyValue, textToBeEncrypted, params);
-        } else {
-            if (keyAlgorithm == 9 && keyValue != null && keyValue.length == 16) {
-                if (params == null) {
-                    this.Aes.aesEncrypt(keyValue, textToBeEncrypted);
-                } else {
-                    PaddingAlgo padAlgo = params.getPaddingAlgo();
-                    ProcessingAlgo procAlgo = params.getProcessingAlgo();
-                    if ((padAlgo == null || padAlgo == PaddingAlgo.NONE) && (procAlgo == null || procAlgo == ProcessingAlgo.ECB) && params.getIV() == null) {
-                        this.Aes.aesEncrypt(keyValue, textToBeEncrypted);
-                    }
-                }
-            }
-
-            throw new CipurseException("Crypto Engine doesn\'t support this functionality");
-        }
-    }
-
-    public byte[] decryptText(byte keyAlgorithm, byte[] keyValue, byte[] textToBeDecrypted, CryptoParameters params) throws CipurseException {
-        if (this.Aes instanceof ICryptoEngine) {
-            ICryptoEngine padAlgo1 = (ICryptoEngine) this.Aes;
-            return padAlgo1.decrypt(keyAlgorithm, keyValue, textToBeDecrypted, params);
-        } else {
-            if (keyAlgorithm == 9 && keyValue != null && keyValue.length == 16) {
-                if (params == null) {
-                    this.Aes.aesDecrypt(keyValue, textToBeDecrypted);
-                } else {
-                    PaddingAlgo padAlgo = params.getPaddingAlgo();
-                    ProcessingAlgo procAlgo = params.getProcessingAlgo();
-                    if ((padAlgo == null || padAlgo == PaddingAlgo.NONE) && (procAlgo == null || procAlgo == ProcessingAlgo.ECB) && params.getIV() == null) {
-                        this.Aes.aesDecrypt(keyValue, textToBeDecrypted);
-                    }
-                }
-            }
-
-            throw new CipurseException("Crypto Engine doesn\'t support this functionality");
-        }
-    }
-
     /**
      * Convenience method to build a GET CHALLENGE command in the APDU buffer
-     *
      **/
     public byte[] buildGetChallenge(CommandApdu commandApdu) {
         RP = this.cipurseCrypto.getRandom(16);
@@ -156,50 +89,17 @@ public class CipurseSecureMessage implements ISO7816 {
         return response;
     }
 
-    /**
-     * Method to build MUTUAL AUTENTICATE command based on the previously derived
-     * session key k0 and the random data generated with finishGetChallenge().
-     *
-     * @param buffer
-     * @param length
-     */
-    public void finishGetChallenge(byte[] buffer, short length) {
-        if (length > CHALLENGES_MAX_LENGTH)
-            throw new Iso7816Exception(SwEnum.SW_WRONG_DATA);
-
-        System.arraycopy(RP, 0, buffer, 0, 16);
-        System.arraycopy(rP, 0, buffer, 16, 6);
-
-    }
-
-    public void setSelectedKey(byte[] selectedKey) {
-        this.selectedKey = selectedKey;
-    }
-
-    public short buildMutualAuthenticate(byte[] buffer, short offset, short keyID) {
-        byte[] mutualAuth = new byte[38];
-        System.arraycopy(Ct, 0, mutualAuth, 0, 16);
-        System.arraycopy(RP, 0, mutualAuth, 16, 16);
-        System.arraycopy(rP, 0, mutualAuth, 32, 6);
-
-        mutualAuthCmd = new byte[this.mutualAuthHeader.length + mutualAuth.length + 2];
-        System.arraycopy(this.mutualAuthHeader, 0, mutualAuthCmd, 0, this.mutualAuthHeader.length);
-        System.arraycopy(mutualAuth, 0, mutualAuthCmd, 5, mutualAuth.length);
-        mutualAuthCmd[4] = (byte) (mutualAuth.length & 255);
-        mutualAuthCmd[mutualAuthCmd.length - 1] = 16;
-        selectedKey = keySet[keyID - 1].clone();
-        return 0;
-    }
-
-    public byte[] finishMutualAuthenticate(byte[] buffer) {
+    public byte[] finishMutualAuthenticate(byte[] commandApdu) {
         try {
+            int keyNo = ByteUtils.byteToInt(commandApdu[3]);
+            selectedKey = keySet[keyNo - 1];
             byte[] response = new byte[16];
             byte[] cP = new byte[16];
             byte[] RT = new byte[16];
             byte[] rT = new byte[6];
-            System.arraycopy(buffer, 5, cP, 0, 16);
-            System.arraycopy(buffer, 21, RT, 0, 16);
-            System.arraycopy(buffer, 37, rT, 0, 6);
+            System.arraycopy(commandApdu, 5, cP, 0, 16);
+            System.arraycopy(commandApdu, 21, RT, 0, 16);
+            System.arraycopy(commandApdu, 37, rT, 0, 6);
 
             byte[] cP1 = this.cipurseCrypto.generateK0AndGetCp(selectedKey, RP, rP, RT, rT);
 
@@ -213,43 +113,16 @@ public class CipurseSecureMessage implements ISO7816 {
             return response;
         } catch (CipurseException ex) {
             logger.log(1, ex.getMessage());
+            resetSecurity();
             throw new Iso7816Exception(SwEnum.SW_WRONG_DATA);
         }
-    }
-
-    /**
-     * Unwrap card response and store output data in the specified buffer.
-     *
-     * @param inBuffer
-     * @param inOffset
-     * @param inLength
-     * @param outBuffer
-     * @param outOffset
-     * @return
-     */
-    public short unwrap(byte[] inBuffer, short inOffset, short inLength, byte[] outBuffer, short outOffset) {
-        return 0;
-    }
-
-    /**
-     * Wraps a command with the specified security level.
-     *
-     * @param smi
-     * @param inBuffer
-     * @param inOffset
-     * @param inLength
-     * @param outBuffer
-     * @param outOffset
-     * @return
-     */
-    public short wrap(short smi, byte[] inBuffer, short inOffset, short inLength, byte[] outBuffer, short outOffset) {
-        return 0;
     }
 
     /**
      * Resets the authentication state and clears all session keys.
      */
     public void resetSecurity() {
-
+        this.SMI = 0;
+        this.selectedKey = nullVector;
     }
 }

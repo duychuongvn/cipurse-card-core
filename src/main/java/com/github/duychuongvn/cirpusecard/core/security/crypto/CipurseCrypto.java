@@ -3,10 +3,10 @@ package com.github.duychuongvn.cirpusecard.core.security.crypto;
 import com.github.duychuongvn.cirpusecard.core.constant.SwEnum;
 import com.github.duychuongvn.cirpusecard.core.exception.Iso7816Exception;
 import com.github.duychuongvn.cirpusecard.core.iso7816.ISO7816;
+import com.github.duychuongvn.cirpusecard.core.util.ByteUtils;
 import org.osptalliance.cipurse.CipurseException;
 import org.osptalliance.cipurse.IAes;
 import org.osptalliance.cipurse.ILogger;
-import org.osptalliance.cipurse.Utility;
 import org.osptalliance.cipurse.Utility.eCaseType;
 
 import java.util.Arrays;
@@ -227,21 +227,6 @@ public class CipurseCrypto implements ISO7816 {
 
     /**
      * <p>
-     * Verify the PICC response
-     * </p>
-     *
-     * @param cT - Terminal cryptogram
-     * @return status of verification
-     * @throws CipurseException In case of any error while processing
-     */
-    public boolean verifyPICCResponse(byte[] cT) throws CipurseException {
-        //function to caluclate c'T := AES(key=k0, RT)
-        byte[] cTDash = Aes.aesEncrypt(k0, RT);
-        return Arrays.equals(cT, cTDash);
-    }
-
-    /**
-     * <p>
      * Generate the plain SM-Command for the given Command
      * </p>
      *
@@ -335,6 +320,8 @@ public class CipurseCrypto implements ISO7816 {
         byte[] response = new byte[nCryptogramCipher.length + 2];
         System.arraycopy(nCryptogramCipher, 0, response, 0, nCryptogramCipher.length);
         System.arraycopy(command, command.length - 2, response, response.length - 2, 2);
+        // - CLA' - INS - P1 - P2 - Lc' - SMI - {DATA} - {Le}
+        // Lc1 include SMI, DATA, LE and old MAC
         return response;
     }
 
@@ -397,14 +384,16 @@ public class CipurseCrypto implements ISO7816 {
 
     }
 
-    private boolean isLePresent(byte[] command) {
+    private boolean isLePresentInENCedCommand(byte[] command) {
         byte INS = command[OFFSET_INS];
-        boolean isReadCommand = false;
-        // READ INSTRUCTION
-        if ((INS & 0xff) == 0xB0) {
-            isReadCommand = true;
+        boolean isLePresent = false;
+        // CLA’ - INS - P1 - P2 - Lc’ - SMI - n*CRYPTOGRAM - {Le} - {Le’}
+        // Lc' include SMI, CRYPTOGRAM, Le
+        int lc1 = ByteUtils.byteToInt(command[4]);
+        if ((lc1 - 1) % 16 != 0) {
+            isLePresent = true;
         }
-        return isReadCommand;
+        return isLePresent;
     }
 
     /**
@@ -423,9 +412,13 @@ public class CipurseCrypto implements ISO7816 {
         //		• CLA - INS - P1 - P2 - {Lc} - {DATA} - {Le}
         //		Transferred ENC’ed command SM-APDU:
         //		• CLA’ - INS - P1 - P2 - Lc’ - SMI - n*CRYPTOGRAM - {Le} - {Le’}
-
+        try {
+            smCommand = getOSPTModifiedCommand(smCommand, smCommand[5]);
+        } catch (CipurseException e) {
+            throw new Iso7816Exception(SwEnum.SW_UNKNOWN);
+        }
         short lc1 = (short) (smCommand[OFFSET_LC] & 0xFF);
-        boolean isLePresent = isLePresent(smCommand);
+        boolean isLePresent = isLePresentInENCedCommand(smCommand);
         byte[] encryptedResp = new byte[lc1 - 1];
         byte le = 0x00;
         if (isLePresent) {
@@ -462,11 +455,13 @@ public class CipurseCrypto implements ISO7816 {
 
         if (isLePresent) {
             dataForMIC[dataForMicLen - 1] = le;
+
         }
+
         byte[] cardMIC = computeMIC(dataForMIC);
         byte[] hostMIC = new byte[CipurseConstant.MIC_LENGH];
         System.arraycopy(unpaddedClearResp, (unpaddedClearResp.length - 4), hostMIC, 0, CipurseConstant.MIC_LENGH);
-
+        dataForMIC[4] = (byte)(dataForMIC.length - 5);
         if (!Arrays.equals(cardMIC, hostMIC)) {
             logger.log(ILogger.ERROR_MESSAGE, "MIC verify failed");
             throw new Iso7816Exception(SwEnum.SW_SECURITY_STATUS_NOT_SATISFIED);
@@ -709,64 +704,19 @@ public class CipurseCrypto implements ISO7816 {
      */
     private byte[] getOSPTModifiedCommand(byte[] command, byte SMI)
             throws CipurseException {
-
-        eCaseType caseType = Utility.getCaseType(command);
-
+        /*
+        The last byte in the transferred command SM-APDU denoted by Le’ is set to 00H. The Le’ field is not
+        present for the case where in the original APDU the Le field is not present and the PCD requests the PICC
+        response in SM_PLAIN.
+         */
         byte[] osptModifiedCmd = null;
-        byte[] commandHeader = new byte[4];
-
-        if (command.length >= CipurseConstant.OFFSET_LC) {
-            System.arraycopy(command, 0, commandHeader, 0, 4);
+        if ((SMI & 0x0C) != 0) {
+            osptModifiedCmd = new byte[command.length - 1];
+            System.arraycopy(command, 0, osptModifiedCmd, 0, osptModifiedCmd.length);
+        } else {
+            osptModifiedCmd = command;
         }
 
-        switch (caseType) {
-            case CASE_1:
-                osptModifiedCmd = new byte[commandHeader.length + 2];
-                System.arraycopy(commandHeader, 0, osptModifiedCmd, 0,
-                        commandHeader.length);
-                osptModifiedCmd[CipurseConstant.OFFSET_LC] = 0x01; // Lc
-                osptModifiedCmd[CipurseConstant.OFFSET_CMD_DATA] = SMI; // Data
-                break;
-
-            case CASE_2:
-                osptModifiedCmd = new byte[commandHeader.length + 3];
-                System.arraycopy(commandHeader, 0, osptModifiedCmd, 0,
-                        commandHeader.length);
-                osptModifiedCmd[CipurseConstant.OFFSET_LC] = 0x02; // Lc
-                osptModifiedCmd[CipurseConstant.OFFSET_CMD_DATA] = SMI; // Data
-                osptModifiedCmd[CipurseConstant.OFFSET_CMD_DATA + 1] = command[CipurseConstant.OFFSET_LC]; // Le
-                break;
-
-            case CASE_3:
-                osptModifiedCmd = new byte[(short) (commandHeader.length + 2
-                        + (short) ((command[CipurseConstant.OFFSET_LC] & 0x00FF)))];
-                System.arraycopy(commandHeader, 0, osptModifiedCmd, 0,
-                        commandHeader.length);
-                osptModifiedCmd[CipurseConstant.OFFSET_LC] = (byte) ((int) (command[CipurseConstant.OFFSET_LC]) + 0x01); // Lc
-                osptModifiedCmd[CipurseConstant.OFFSET_CMD_DATA] = SMI; // Data
-                System.arraycopy(command, CipurseConstant.OFFSET_CMD_DATA,
-                        osptModifiedCmd, CipurseConstant.OFFSET_CMD_DATA + 1,
-                        (short) ((command[CipurseConstant.OFFSET_LC] & 0x00FF)));
-                break;
-
-            case CASE_4:
-                osptModifiedCmd = new byte[commandHeader.length + 3
-                        + (short) ((command[CipurseConstant.OFFSET_LC] & 0x00FF))];
-                System.arraycopy(commandHeader, 0, osptModifiedCmd, 0,
-                        commandHeader.length);
-                osptModifiedCmd[CipurseConstant.OFFSET_LC] = (byte) (command[4] + 0x02); // Lc
-                osptModifiedCmd[CipurseConstant.OFFSET_CMD_DATA] = SMI; // Data
-                System.arraycopy(command, CipurseConstant.OFFSET_CMD_DATA,
-                        osptModifiedCmd, CipurseConstant.OFFSET_CMD_DATA + 1,
-                        (short) ((command[CipurseConstant.OFFSET_LC] & 0x00FF)));
-                osptModifiedCmd[osptModifiedCmd.length - 1] = command[command.length - 1]; // Le
-                break;
-
-            default:
-                throw new CipurseException(CipurseConstant.INVALID_CASE);
-        }
-
-        osptModifiedCmd[0] = (byte) (osptModifiedCmd[0] | CipurseConstant.SM_BIT);
         return osptModifiedCmd;
     }
 

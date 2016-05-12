@@ -1,5 +1,7 @@
 package com.github.duychuongvn.cirpusecard.core.command;
 
+import com.github.duychuongvn.cirpusecard.core.security.securemessaging.AES;
+import com.github.duychuongvn.cirpusecard.core.security.securemessaging.Logger;
 import com.github.duychuongvn.cirpusecard.core.util.ByteUtils;
 import org.fest.assertions.Assertions;
 import org.junit.Test;
@@ -15,7 +17,7 @@ public class CommandProviderTest {
         String updateBinaryCommand = "00 D6 00 00 04 01 02 03 04";
         String readBinaryCommand = "00 B0 00 00 C8";
 
-        CommandProvider commandFactory = new CommandProvider();
+        CommandProvider commandFactory = new CommandProvider(new AES(), new Logger());
         String createADFResponse = ByteUtils.bytesToHexString(commandFactory.execute(ByteUtils.fromHexString(createADFCommand)));
         String createEFResponse = ByteUtils.bytesToHexString(commandFactory.execute(ByteUtils.fromHexString(createEFCommand)));
         String updateBinaryResponse = ByteUtils.bytesToHexString(commandFactory.execute(ByteUtils.fromHexString(updateBinaryCommand)));

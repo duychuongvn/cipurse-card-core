@@ -3,7 +3,10 @@ package com.github.duychuongvn.cirpusecard.core.command;
 import com.github.duychuongvn.cirpusecard.core.constant.CommandEnum;
 import com.github.duychuongvn.cirpusecard.core.constant.SwEnum;
 import com.github.duychuongvn.cirpusecard.core.exception.Iso7816Exception;
+import com.github.duychuongvn.cirpusecard.core.security.securemessaging.CipurseSecureMessage;
 import com.github.duychuongvn.cirpusecard.core.util.ByteUtils;
+import org.osptalliance.cipurse.IAes;
+import org.osptalliance.cipurse.ILogger;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,9 +18,18 @@ public class CommandProvider {
 
     private List<ADFFile> adfFiles = new ArrayList<ADFFile>(10);
     private ADFFile currentADF;
+    private IAes aes;
+    private ILogger logger;
+    private CipurseSecureMessage secureMessage;
+    public CommandProvider(IAes aes, ILogger logger) {
+        this.aes = aes;
+        this.logger= logger;
+        this.secureMessage = CipurseSecureMessage.getInstance(aes, logger);
+    }
     public byte[] execute(byte[] apdu) {
         CommandApdu commandApdu = new CommandApdu(apdu);
         byte[] response = new byte[0];
+        // Unwrap command
         if (commandApdu.getCommandEnum() == CommandEnum.CREATE_FILE) {
             CipurseFile cipurseFile = CreateCipurseFileFactory.createInstance(commandApdu, currentADF);
             if (cipurseFile instanceof ADFFile) {
@@ -47,6 +59,7 @@ public class CommandProvider {
         System.arraycopy(response, 0, responseWithStatus, 0, response.length);
         System.arraycopy(ByteUtils.fromHexString("90 00"), 0, responseWithStatus, response.length, 2);
         return responseWithStatus;
+        // Wrap response
     }
 
     private byte[] selectFileByFID(CommandApdu commandApdu) {
