@@ -30,6 +30,8 @@ public class CommandProvider {
         CommandApdu commandApdu = new CommandApdu(apdu);
         byte[] response = new byte[0];
         // Unwrap command
+        // Check access right
+        // Check Secure Message Rule
         if (commandApdu.getCommandEnum() == CommandEnum.CREATE_FILE) {
             CipurseFile cipurseFile = CreateCipurseFileFactory.createInstance(commandApdu, currentADF);
             if (cipurseFile instanceof ADFFile) {
@@ -67,7 +69,7 @@ public class CommandProvider {
     }
 
     private byte[] selectFileByAID(CommandApdu commandApdu) {
-
+        // TODO: Check access right
         int dataIndex = 5;
         int lc = commandApdu.getLc();
         byte[] aidBytes = new byte[lc];

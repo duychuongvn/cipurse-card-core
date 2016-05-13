@@ -24,7 +24,31 @@ public class CommandApdu {
     private byte[] data = new byte[0];
     private CommandEnum commandEnum;
     private boolean isSecureMessaging = false;
+
+
     private byte smi;
+
+    public static CommandApdu createInstanceFromSMCommand(byte[] smCommand) {
+
+        byte cla = smCommand[0];
+        if (cla != (byte) 0x04) {
+            throw new IllegalArgumentException("The command is not Secure message: " + ByteUtils.bytesToHexString(smCommand));
+        }
+        byte[] commandHeader = new byte[4];
+        System.arraycopy(smCommand, 0, commandHeader, 0, commandHeader.length);
+        commandHeader[0] = 0x00;
+        int lc = ByteUtils.byteToInt(smCommand[4]);
+        int dataIndex = commandHeader.length + 1;
+        byte[] command = new byte[smCommand.length - 1];
+        System.arraycopy(commandHeader, 0, command, 0, commandHeader.length);
+        command[commandHeader.length] = (byte) (lc - 1);
+        System.arraycopy(smCommand, dataIndex + 1, command, dataIndex, command.length - dataIndex);
+        CommandApdu commandApdu = new CommandApdu(command);
+        commandApdu.smi = smCommand[5];
+        commandApdu.isSecureMessaging = true;
+        return commandApdu;
+    }
+
     public CommandApdu(final CommandEnum commandEnum, int p1, int p2, byte[] data) {
         this.cla = commandEnum.getCla();
         this.ins = commandEnum.getIns();
@@ -57,7 +81,7 @@ public class CommandApdu {
 
     public CommandApdu(byte[] command) {
         byte cla = command[0];
-        if(cla == (byte)0x04) {
+        if (cla == (byte) 0x04) {
             cla = 0x00;
             smi = command[5];
             isSecureMessaging = true;
@@ -65,8 +89,8 @@ public class CommandApdu {
         int commandId = ByteUtils.byteArrayToInt(new byte[]{cla, command[1]});
         try {
             this.commandEnum = EnumUtil.getEnum(commandId, CommandEnum.class);
-        }catch (EnumParserException exception) {
-            throw  new Iso7816Exception(SwEnum.SW_INS_NOT_SUPPORTED);
+        } catch (EnumParserException exception) {
+            throw new Iso7816Exception(SwEnum.SW_INS_NOT_SUPPORTED);
         }
         this.p1 = command[2];
         this.p2 = command[3];
@@ -77,7 +101,7 @@ public class CommandApdu {
             case CASE1:
                 break;
             case CASE2:
-                this.le =  ByteUtils.byteToInt(command[4]) ;
+                this.le = ByteUtils.byteToInt(command[4]);
                 if (le == 0) {
                     le = 256;
                 }
@@ -88,7 +112,7 @@ public class CommandApdu {
                 leUsed = true;
                 break;
             case CASE3:
-                lc =  ByteUtils.byteToInt(command[4]);
+                lc = ByteUtils.byteToInt(command[4]);
                 data = new byte[lc];
                 System.arraycopy(command, 5, data, 0, lc);
                 break;
@@ -98,8 +122,8 @@ public class CommandApdu {
                 System.arraycopy(command, 7, data, 0, lc);
                 break;
             case CASE4:
-                lc =  ByteUtils.byteToInt(command[4]);
-                le =  ByteUtils.byteToInt(command[command.length - 1]);
+                lc = ByteUtils.byteToInt(command[4]);
+                le = ByteUtils.byteToInt(command[command.length - 1]);
                 data = new byte[lc];
                 System.arraycopy(command, 5, data, 0, lc);
                 leUsed = true;
@@ -207,4 +231,9 @@ public class CommandApdu {
         }
         return command;
     }
+
+    public byte getSmi() {
+        return smi;
+    }
+
 }

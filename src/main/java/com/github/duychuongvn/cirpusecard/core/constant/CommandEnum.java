@@ -20,6 +20,7 @@ public enum CommandEnum implements EnumKey {
     CREATE_FILE(0x00, 0xE0),
     DELETE_FILE(0x00, 0xE4),
     ACTIVATE_FILE(0x00, 0x44),
+    DEACTIVATE_FILE(0x00, 0x04),
     GET_CHALLENGE(0x00, 0x84),
     MUTUAL_AUTHENTICATE(0x00, 0x82),
     UPDATE_FILE_ATTRIBUTES(0x00, 0xDE),

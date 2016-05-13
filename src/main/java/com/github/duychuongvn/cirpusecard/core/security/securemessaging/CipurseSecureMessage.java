@@ -28,6 +28,7 @@ public class CipurseSecureMessage implements ISO7816 {
     private ICipurseSMKey samSmKey;
     private static byte[] nullVector = new byte[16];
     private byte[] selectedKey;
+    private int selectedKeyNo;
     private short _0 = 0;
     private byte[] rP;
     private byte[] RP;
@@ -91,8 +92,8 @@ public class CipurseSecureMessage implements ISO7816 {
 
     public byte[] finishMutualAuthenticate(byte[] commandApdu) {
         try {
-            int keyNo = ByteUtils.byteToInt(commandApdu[3]);
-            selectedKey = keySet[keyNo - 1];
+            selectedKeyNo = ByteUtils.byteToInt(commandApdu[3]);
+            selectedKey = keySet[selectedKeyNo - 1];
             byte[] response = new byte[16];
             byte[] cP = new byte[16];
             byte[] RT = new byte[16];
@@ -124,5 +125,9 @@ public class CipurseSecureMessage implements ISO7816 {
     public void resetSecurity() {
         this.SMI = 0;
         this.selectedKey = nullVector;
+    }
+
+    public int getSelectedKeyNo() {
+        return selectedKeyNo;
     }
 }
