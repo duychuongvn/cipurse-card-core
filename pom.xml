@@ -23,7 +23,7 @@
         <dependency>
             <groupId>cipurse</groupId>
             <artifactId>CipurseCoreLibrary</artifactId>
-            <systemPath>${project.basedir}\lib\CipurseCoreLibrary-2.2.jar</systemPath>
+            <systemPath>${project.basedir}/lib/CipurseCoreLibrary-2.2.jar</systemPath>
             <scope>system</scope>
             <version>2.2</version>
         </dependency>
